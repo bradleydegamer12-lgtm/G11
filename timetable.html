@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>g11 — Timetable</title>
+<meta name="theme-color" content="#F4D35E" />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body data-page="timetable">
+
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-mark">g11</div>
+    <div><div class="brand-name">Timetable</div><div class="brand-sub">This week</div></div>
+  </div>
+  <button class="menu-btn" id="menuBtn" aria-label="Open menu">
+    <div class="hamburger"><span></span><span></span><span></span></div>
+  </button>
+</header>
+
+<div class="drawer-overlay" id="drawerOverlay"></div>
+<nav class="drawer" id="drawer">
+  <div class="drawer-header">
+    <span class="font-display" style="font-weight:700;font-size:16px;">Menu</span>
+    <button class="drawer-close" id="drawerClose" aria-label="Close menu">✕</button>
+  </div>
+  <a class="nav-link" data-nav="dashboard" href="index.html"><span class="dot"></span>Dashboard</a>
+  <a class="nav-link" data-nav="timetable" href="timetable.html"><span class="dot"></span>Timetable</a>
+  <a class="nav-link" data-nav="resources" href="resources.html"><span class="dot"></span>Resource Hub</a>
+  <a class="nav-link" data-nav="assignments" href="assignments.html"><span class="dot"></span>Assignments</a>
+  <a class="nav-link" data-nav="calculator" href="calculator.html"><span class="dot"></span>Grade Calculator</a>
+  <a class="nav-link" data-nav="lounge" href="lounge.html"><span class="dot"></span>Study Lounge</a>
+  <div class="drawer-footer">
+    <span style="font-size:12px;color:var(--text-muted);">Theme</span>
+    <button class="theme-toggle" onclick="toggleTheme()"><span id="themeLabel">🌙 Dark</span></button>
+  </div>
+</nav>
+
+<main class="page">
+  <div class="card" style="margin-bottom:16px;">
+    <div class="section-title" style="margin-top:0;">Up next</div>
+    <div style="font-weight:700;font-size:18px;" id="upNextName">—</div>
+    <div class="mono" id="upNextCountdown" style="font-size:22px;font-weight:700;margin-top:4px;">--</div>
+  </div>
+
+  <div class="day-pills" id="dayPills"></div>
+  <div id="periodsList" class="grid"></div>
+</main>
+
+<nav class="tabbar">
+  <a class="tab" data-nav="dashboard" href="index.html"><span class="ico">🏠</span>Home</a>
+  <a class="tab active" data-nav="timetable" href="timetable.html"><span class="ico">📅</span>Timetable</a>
+  <a class="tab" data-nav="resources" href="resources.html"><span class="ico">📁</span>Resources</a>
+  <a class="tab" data-nav="assignments" href="assignments.html"><span class="ico">✅</span>Tasks</a>
+  <a class="tab" data-nav="lounge" href="lounge.html"><span class="ico">💬</span>Lounge</a>
+</nav>
+
+<div id="mascot"></div>
+<div class="bubble" id="bubble"></div>
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script>
+  const DAY_NAMES = ["", "Mon", "Tue", "Wed", "Thu", "Fri"];
+  let selectedDay = new Date().getDay(); // 0=Sun..6=Sat
+  if(selectedDay === 0 || selectedDay === 6) selectedDay = 1;
+
+  function renderDayPills(){
+    const wrap = document.getElementById("dayPills");
+    wrap.innerHTML = "";
+    for(let d = 1; d <= 5; d++){
+      const btn = document.createElement("button");
+      btn.className = "day-pill" + (d === selectedDay ? " active" : "");
+      btn.textContent = DAY_NAMES[d];
+      btn.onclick = () => { selectedDay = d; renderDayPills(); renderPeriods(); };
+      wrap.appendChild(btn);
+    }
+  }
+
+  function timeToMinutes(t){ const [h,m] = t.split(":").map(Number); return h*60+m; }
+
+  function renderPeriods(){
+    const list = document.getElementById("periodsList");
+    list.innerHTML = "";
+    const rows = TIMETABLE.filter(p => p.day === selectedDay);
+    const now = new Date();
+    const nowMin = now.getHours()*60 + now.getMinutes();
+    const isToday = selectedDay === (now.getDay() === 0 ? 7 : now.getDay());
+
+    rows.forEach(p => {
+      const isBreak = p.subject === "break";
+      const sub = isBreak ? null : subjectById(p.subject);
+      const el = document.createElement("div");
+      const active = isToday && nowMin >= timeToMinutes(p.start) && nowMin < timeToMinutes(p.end);
+      el.className = "card period" + (active ? " now" : "") + (isBreak ? " break" : "");
+      el.innerHTML = `
+        <div class="bar" style="background:${isBreak ? 'var(--border)' : sub.color}"></div>
+        <div class="time">${p.start}</div>
+        <div class="sub">${isBreak ? "Break" : sub.name}</div>
+      `;
+      list.appendChild(el);
+    });
+  }
+
+  function updateUpNext(){
+    const now = new Date();
+    const today = now.getDay() === 0 ? 7 : now.getDay();
+    const nowMin = now.getHours()*60 + now.getMinutes();
+    let upcoming = TIMETABLE
+      .filter(p => p.day >= today && p.subject !== "break")
+      .filter(p => p.day > today || timeToMinutes(p.start) > nowMin)
+      .sort((a,b) => (a.day - b.day) || (timeToMinutes(a.start) - timeToMinutes(b.start)))[0];
+
+    const nameEl = document.getElementById("upNextName");
+    const cdEl = document.getElementById("upNextCountdown");
+    if(!upcoming){ nameEl.textContent = "Nothing scheduled"; cdEl.textContent = "--"; return; }
+
+    const sub = subjectById(upcoming.subject);
+    nameEl.textContent = `${sub.name} · ${DAY_NAMES[upcoming.day]} ${upcoming.start}`;
+
+    function tick(){
+      const target = new Date();
+      const dayDiff = (upcoming.day - today + 7) % 7;
+      target.setDate(target.getDate() + dayDiff);
+      const [h,m] = upcoming.start.split(":").map(Number);
+      target.setHours(h, m, 0, 0);
+      const diff = target.getTime() - Date.now();
+      if(diff <= 0){ cdEl.textContent = "Starting now"; return; }
+      const hh = Math.floor(diff / 3600000);
+      const mm = Math.floor((diff % 3600000) / 60000);
+      const ss = Math.floor((diff % 60000) / 1000);
+      cdEl.textContent = `${hh}h ${String(mm).padStart(2,"0")}m ${String(ss).padStart(2,"0")}s`;
+    }
+    tick();
+    setInterval(tick, 1000);
+  }
+
+  renderDayPills();
+  renderPeriods();
+  updateUpNext();
+</script>
+</body>
+</html>
