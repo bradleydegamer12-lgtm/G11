@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>g11 — Resource Hub</title>
+<meta name="theme-color" content="#F4D35E" />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body data-page="resources">
+
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-mark">g11</div>
+    <div><div class="brand-name">Resource Hub</div><div class="brand-sub">Notes & past papers</div></div>
+  </div>
+  <button class="menu-btn" id="menuBtn" aria-label="Open menu">
+    <div class="hamburger"><span></span><span></span><span></span></div>
+  </button>
+</header>
+
+<div class="drawer-overlay" id="drawerOverlay"></div>
+<nav class="drawer" id="drawer">
+  <div class="drawer-header">
+    <span class="font-display" style="font-weight:700;font-size:16px;">Menu</span>
+    <button class="drawer-close" id="drawerClose" aria-label="Close menu">✕</button>
+  </div>
+  <a class="nav-link" data-nav="dashboard" href="index.html"><span class="dot"></span>Dashboard</a>
+  <a class="nav-link" data-nav="timetable" href="timetable.html"><span class="dot"></span>Timetable</a>
+  <a class="nav-link" data-nav="resources" href="resources.html"><span class="dot"></span>Resource Hub</a>
+  <a class="nav-link" data-nav="assignments" href="assignments.html"><span class="dot"></span>Assignments</a>
+  <a class="nav-link" data-nav="calculator" href="calculator.html"><span class="dot"></span>Grade Calculator</a>
+  <a class="nav-link" data-nav="lounge" href="lounge.html"><span class="dot"></span>Study Lounge</a>
+  <div class="drawer-footer">
+    <span style="font-size:12px;color:var(--text-muted);">Theme</span>
+    <button class="theme-toggle" onclick="toggleTheme()"><span id="themeLabel">🌙 Dark</span></button>
+  </div>
+</nav>
+
+<main class="page">
+  <input class="search-input" id="search" placeholder="Search subjects…" />
+  <div id="subjectList" class="grid" style="gap:8px;"></div>
+  <p style="font-size:12px;color:var(--text-muted);text-align:center;margin-top:18px;">
+    To add real files: drop them in a <code>/resources/&lt;subject&gt;/</code> folder in the repo and link them below in <code>js/resources-data.js</code>.
+  </p>
+</main>
+
+<nav class="tabbar">
+  <a class="tab" data-nav="dashboard" href="index.html"><span class="ico">🏠</span>Home</a>
+  <a class="tab" data-nav="timetable" href="timetable.html"><span class="ico">📅</span>Timetable</a>
+  <a class="tab active" data-nav="resources" href="resources.html"><span class="ico">📁</span>Resources</a>
+  <a class="tab" data-nav="assignments" href="assignments.html"><span class="ico">✅</span>Tasks</a>
+  <a class="tab" data-nav="lounge" href="lounge.html"><span class="ico">💬</span>Lounge</a>
+</nav>
+
+<div id="mascot"></div>
+<div class="bubble" id="bubble"></div>
+
+<script src="js/data.js"></script>
+<script src="js/resources-data.js"></script>
+<script src="js/app.js"></script>
+<script>
+  function render(filter){
+    const wrap = document.getElementById("subjectList");
+    wrap.innerHTML = "";
+    const q = (filter || "").toLowerCase();
+    SUBJECTS.filter(s => s.name.toLowerCase().includes(q)).forEach(s => {
+      const files = RESOURCES[s.id] || [];
+      const chip = document.createElement("div");
+      chip.className = "card subject-chip";
+      chip.style.padding = "0";
+      chip.innerHTML = `
+        <div class="subject-chip" style="padding:14px;">
+          <div class="left">
+            <div class="swatch" style="background:${s.color}"></div>
+            <div style="font-weight:600;">${s.name}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:12px;color:var(--text-muted);">${files.length}</span>
+            <span class="chev">›</span>
+          </div>
+        </div>
+        <div class="res-body">
+          ${files.map(f => `<div class="res-item"><span class="icon">${f.type === "pdf" ? "📄" : "📝"}</span>${f.name}</div>`).join("") || `<div class="res-item" style="color:var(--text-muted);">No files added yet</div>`}
+        </div>
+      `;
+      const header = chip.querySelector(".subject-chip");
+      const body = chip.querySelector(".res-body");
+      header.onclick = () => { header.classList.toggle("open"); body.classList.toggle("open"); };
+      wrap.appendChild(chip);
+    });
+  }
+  render("");
+  document.getElementById("search").addEventListener("input", (e) => render(e.target.value));
+</script>
+</body>
+</html>
