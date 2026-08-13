@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>g11 — Dashboard</title>
+<meta name="theme-color" content="#F4D35E" />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body data-page="dashboard">
+
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-mark">g11</div>
+    <div>
+      <div class="brand-name">g11</div>
+      <div class="brand-sub">Grade 11 hub</div>
+    </div>
+  </div>
+  <button class="menu-btn" id="menuBtn" aria-label="Open menu">
+    <div class="hamburger"><span></span><span></span><span></span></div>
+  </button>
+</header>
+
+<div class="drawer-overlay" id="drawerOverlay"></div>
+<nav class="drawer" id="drawer">
+  <div class="drawer-header">
+    <span class="font-display" style="font-weight:700;font-size:16px;">Menu</span>
+    <button class="drawer-close" id="drawerClose" aria-label="Close menu">✕</button>
+  </div>
+  <a class="nav-link" data-nav="dashboard" href="index.html"><span class="dot"></span>Dashboard</a>
+  <a class="nav-link" data-nav="timetable" href="timetable.html"><span class="dot"></span>Timetable</a>
+  <a class="nav-link" data-nav="resources" href="resources.html"><span class="dot"></span>Resource Hub</a>
+  <a class="nav-link" data-nav="assignments" href="assignments.html"><span class="dot"></span>Assignments</a>
+  <a class="nav-link" data-nav="calculator" href="calculator.html"><span class="dot"></span>Grade Calculator</a>
+  <a class="nav-link" data-nav="lounge" href="lounge.html"><span class="dot"></span>Study Lounge</a>
+  <div class="drawer-footer">
+    <span style="font-size:12px;color:var(--text-muted);">Theme</span>
+    <button class="theme-toggle" onclick="toggleTheme()"><span id="themeLabel">🌙 Dark</span></button>
+  </div>
+</nav>
+
+<main class="page">
+  <section class="hero">
+    <div class="eyebrow">Next up</div>
+    <h1 id="examName">Loading…</h1>
+    <div class="countdown mono" id="examCountdown">--</div>
+    <div class="countdown-label">until it starts</div>
+  </section>
+
+  <div class="stat-row">
+    <div class="stat">
+      <div class="num mono" id="statDue">0</div>
+      <div class="lbl">Assignments due this week</div>
+    </div>
+    <div class="stat">
+      <div class="num mono" id="statSubjects">13</div>
+      <div class="lbl">Subjects tracked</div>
+    </div>
+  </div>
+
+  <div class="section-title">Announcements</div>
+  <div class="card" style="padding:4px;">
+    <div class="announce">
+      <span class="tag">Business Studies</span>
+      <div>Chapter 4 test moved to Thursday — bring your calculator.</div>
+      <div class="meta">Posted by Mr. Dlamini · 2 days ago</div>
+    </div>
+    <div class="announce">
+      <span class="tag">General</span>
+      <div>Timetable updated for the new term — check the Timetable tab.</div>
+      <div class="meta">Posted by Class Rep · 4 days ago</div>
+    </div>
+    <div class="announce">
+      <span class="tag">Web Programming</span>
+      <div>Project briefs uploaded to the Resource Hub. Due in 2 weeks.</div>
+      <div class="meta">Posted by Ms. Naidoo · 5 days ago</div>
+    </div>
+  </div>
+
+  <div class="section-title">Quick links</div>
+  <div class="grid" style="grid-template-columns:1fr 1fr;">
+    <a href="assignments.html" class="card" style="text-decoration:none;color:inherit;">
+      <div style="font-size:20px;">📝</div>
+      <div style="font-weight:600;margin-top:6px;">Assignments</div>
+      <div style="font-size:12px;color:var(--text-muted);">Track what's due</div>
+    </a>
+    <a href="calculator.html" class="card" style="text-decoration:none;color:inherit;">
+      <div style="font-size:20px;">🧮</div>
+      <div style="font-weight:600;margin-top:6px;">Grade Calculator</div>
+      <div style="font-size:12px;color:var(--text-muted);">Estimate your %</div>
+    </a>
+  </div>
+</main>
+
+<nav class="tabbar">
+  <a class="tab active" data-nav="dashboard" href="index.html"><span class="ico">🏠</span>Home</a>
+  <a class="tab" data-nav="timetable" href="timetable.html"><span class="ico">📅</span>Timetable</a>
+  <a class="tab" data-nav="resources" href="resources.html"><span class="ico">📁</span>Resources</a>
+  <a class="tab" data-nav="assignments" href="assignments.html"><span class="ico">✅</span>Tasks</a>
+  <a class="tab" data-nav="lounge" href="lounge.html"><span class="ico">💬</span>Lounge</a>
+</nav>
+
+<div id="mascot"></div>
+<div class="bubble" id="bubble"></div>
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script>
+  document.getElementById("examName").textContent = NEXT_EXAM.name;
+  startCountdown(NEXT_EXAM.date, "examCountdown");
+
+  // Quick stat: assignments due within 7 days, pulled from shared localStorage store
+  function computeDueSoon(){
+    const tasks = JSON.parse(localStorage.getItem("g11-tasks") || "[]");
+    const now = Date.now();
+    const week = 7 * 86400000;
+    const count = tasks.filter(t => !t.done && (new Date(t.due).getTime() - now) < week).length;
+    document.getElementById("statDue").textContent = count;
+  }
+  computeDueSoon();
+</script>
+</body>
+</html>
